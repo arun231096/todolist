@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.to.dolist.model.ToDoList;
 import com.to.dolist.service.ToDoListServiceImpl;
@@ -22,7 +23,7 @@ public class ToDoListController {
 	ToDoListServiceImpl service;
 	ToDoList list = getObj();
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
-	public String create(Locale locale, Model model,
+	public ModelAndView create(Locale locale,
 			@RequestParam String title,
 			@RequestParam String message,
 			@RequestParam int estimation,
@@ -37,12 +38,13 @@ public class ToDoListController {
 		list.setStatus(status);
 		list.setTitle(title);
 		list = service.create(list);
-		model.addAttribute("serverTime", list.toString());
-		return "home";
+		ModelAndView model = new ModelAndView("home");
+		model.addObject("lists", service.readAll());
+		return model;
 	}
 	
 	@RequestMapping(value="/update", method = RequestMethod.POST)
-	public String update (Locale locale, Model model,
+	public ModelAndView update (Locale locale,
 			@RequestParam long id,
 			@RequestParam String title,
 			@RequestParam String message,
@@ -59,29 +61,39 @@ public class ToDoListController {
 		list.setStatus(status);
 		list.setTitle(title);
 		list = service.update(list);
-		model.addAttribute("serverTime", list.toString());
-		return "home";
+		ModelAndView model = new ModelAndView("home");
+		model.addObject("lists", service.readAll());
+		return model;
 	}
 	
 	@RequestMapping(value="/read", method =  RequestMethod.GET)
 	public String read(Locale locale, Model model, @RequestParam long id) {
 		list = service.read(id);
-		model.addAttribute("serverTime", list.toString());
-		return "home";
+		model.addAttribute("id", list.getId());
+		model.addAttribute("title", list.getTitle());
+		model.addAttribute("estimation", list.getEstimation());
+		model.addAttribute("startdate", list.getStartdate());
+		model.addAttribute("duedate", list.getDuedate());
+		model.addAttribute("message", list.getMessgae());
+		model.addAttribute("status", list.getStatus());
+		return "edit";
 	}
 	
 	@RequestMapping(value="/", method =  RequestMethod.GET)
-	public String readAll(Locale locale, Model model) {
+	public ModelAndView readAll(){
+		ModelAndView model = new ModelAndView("home");
 		List<ToDoList> list = service.readAll();
-		model.addAttribute("serverTime", list.toString());
-		return "home";
+		model.addObject("lists", list);
+		return model;
+		
 	}
 	
 	@RequestMapping(value="/delete", method =  RequestMethod.GET)
-	public String delete(Locale locale, Model model, @RequestParam long id) {
+	public ModelAndView delete(Locale locale, @RequestParam long id) {
 		service.delete(id);
-		model.addAttribute("serverTime", id+" Deleted");
-		return "home";
+		ModelAndView model = new ModelAndView("home");
+		model.addObject("lists", service.readAll());
+		return model;
 	}
 
 	@Bean
