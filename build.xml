@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name = "ToDoList" basedir = ".">
+
+   <property name = "deploy.path" value = "D:\tools\apache-tomcat-8.5.37\webapps"/>
+   <property name = "src.dir" value = "src"/>
+   <property name = "web.dir" value = "war"/>
+   <property name = "build.dir" value = "${web.dir}/WEB-INF/classes"/>
+   <property name = "name" value = "ToDoList"/>
+   <property name="tomcat.home" value="D:\tools\apache-tomcat-8.5.37" />
+
+   <path id = "master-classpath">
+      <fileset dir = "${web.dir}/WEB-INF/lib">
+         <include name = "*.jar"/>
+      </fileset>
+      
+      <pathelement path = "${build.dir}"/>
+   </path>
+    
+   <target name = "install" description = "Compile main source tree java files">
+      <mkdir dir = "${build.dir}"/>
+     <delete>
+         <fileset dir = ".">
+            <include name = "**/*.war"/>
+         </fileset>
+      </delete>
+   	  <delete>
+   	     <fileset dir = "${build.dir}">
+  	        <include name = "**/*.*"/>
+         </fileset>
+      </delete>
+	  <java classname="org.apache.catalina.startup.Bootstrap" fork="true">
+	      <classpath path="${tomcat.home}/bin/bootstrap.jar:${tomcat.home}/bin/tomcat-juli.jar" />
+	      <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+	      <arg line="stop"/>
+      </java>
+
+      <javac destdir = "${build.dir}" source = "1.8" target = "1.8" debug = "true"
+         deprecation = "false" optimize = "false" failonerror = "true" includeantruntime="false">
+         
+         <src path = "${src.dir}"/>
+         <classpath refid = "master-classpath"/>
+      </javac>
+
+      <war destfile = "${name}.war" webxml = "${web.dir}/WEB-INF/web.xml">
+         <fileset dir = "${web.dir}">
+            <include name = "**/*.*"/>
+         </fileset>
+      </war>
+      
+      <copy todir = "${deploy.path}" preservelastmodified = "true">
+         <fileset dir = ".">
+            <include name = "*.war"/>
+         </fileset>
+      </copy>
+
+      <java classname="org.apache.catalina.startup.Bootstrap" fork="true">
+            <classpath path="${tomcat.home}/bin/bootstrap.jar:${tomcat.home}/bin/tomcat-juli.jar" />
+            <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+       </java>
+
+   </target>  
+</project>
