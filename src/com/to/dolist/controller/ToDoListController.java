@@ -6,6 +6,7 @@ import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.to.dolist.model.ToDoList;
 import com.to.dolist.service.ToDoListServiceImpl;
+import com.to.dolist.utilities.AppException;
 
 @Controller
 public class ToDoListController {
@@ -23,7 +25,7 @@ public class ToDoListController {
 	ToDoListServiceImpl service;
 	ToDoList list = getObj();
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
-	public ModelAndView create(Locale locale,
+	public ModelAndView create(Locale locale,Model view,
 			@RequestParam String title,
 			@RequestParam String message,
 			@RequestParam int estimation,
@@ -37,14 +39,24 @@ public class ToDoListController {
 		list.setStartdate(startdate);
 		list.setStatus(status);
 		list.setTitle(title);
-		list = service.create(list);
 		ModelAndView model = new ModelAndView("home");
-		model.addObject("lists", service.readAll());
-		return model;
+		try {
+			list = service.create(list);
+			model.setStatus(HttpStatus.OK);
+			model.addObject("lists", service.readAll());
+			return model;
+		} catch (Exception e) {
+			model.setStatus(HttpStatus.BAD_REQUEST);
+			if (e instanceof AppException) {
+				System.out.println(((AppException) e).getErrorCodes());
+			} else { System.out.println(e.getMessage());}
+			view.addAttribute("error", "OOPS ERROR WHILE CREATING TODO FOR YOU");
+			return model;
+		}
 	}
 	
 	@RequestMapping(value="/update", method = RequestMethod.POST)
-	public ModelAndView update (Locale locale,
+	public ModelAndView update (Locale locale,Model view,
 			@RequestParam long id,
 			@RequestParam String title,
 			@RequestParam String message,
@@ -60,40 +72,71 @@ public class ToDoListController {
 		list.setStartdate(startdate);
 		list.setStatus(status);
 		list.setTitle(title);
-		list = service.update(list);
-		ModelAndView model = new ModelAndView("home");
-		model.addObject("lists", service.readAll());
-		return model;
+		ModelAndView model;
+		try {
+			list = service.update(list);
+			model = new ModelAndView("home");
+			model.addObject("lists", service.readAll());
+			return model;
+		} catch (Exception e) {
+			if (e instanceof AppException) {
+				System.out.println(((AppException) e).getErrorCodes());
+			} else { System.out.println(e.getMessage()); }
+			model = new ModelAndView("redirect:/read");
+			model.setStatus(HttpStatus.BAD_REQUEST);
+			view.addAttribute("id", list.getId());
+			return model;
+		}
 	}
 	
 	@RequestMapping(value="/read", method =  RequestMethod.GET)
 	public String read(Locale locale, Model model, @RequestParam long id) {
-		list = service.read(id);
-		model.addAttribute("id", list.getId());
-		model.addAttribute("title", list.getTitle());
-		model.addAttribute("estimation", list.getEstimation());
-		model.addAttribute("startdate", list.getStartdate());
-		model.addAttribute("duedate", list.getDuedate());
-		model.addAttribute("message", list.getMessgae());
-		model.addAttribute("status", list.getStatus());
+		try {
+			list = service.read(id);
+			model.addAttribute("id", list.getId());
+			model.addAttribute("title", list.getTitle());
+			model.addAttribute("estimation", list.getEstimation());
+			model.addAttribute("startdate", list.getStartdate());
+			model.addAttribute("duedate", list.getDuedate());
+			model.addAttribute("message", list.getMessgae());
+			model.addAttribute("status", list.getStatus());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			model.addAttribute("error", "OOPS DATA NOT FOUND");
+		}
 		return "edit";
 	}
 	
 	@RequestMapping(value="/", method =  RequestMethod.GET)
-	public ModelAndView readAll(){
+	public ModelAndView readAll(Model view){
 		ModelAndView model = new ModelAndView("home");
-		List<ToDoList> list = service.readAll();
-		model.addObject("lists", list);
-		return model;
+		try {
+			List<ToDoList> list = service.readAll();
+			model.addObject("lists", list);
+			return model;
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			view.addAttribute("error", "OOPS DATA NOT FOUND");
+			model.setStatus(HttpStatus.BAD_REQUEST);
+			return model;
+		}
 		
 	}
 	
 	@RequestMapping(value="/delete", method =  RequestMethod.GET)
-	public ModelAndView delete(Locale locale, @RequestParam long id) {
-		service.delete(id);
+	public ModelAndView delete(Locale locale,Model view, @RequestParam long id) {
+		
 		ModelAndView model = new ModelAndView("home");
-		model.addObject("lists", service.readAll());
-		return model;
+		try {
+			service.delete(id);
+			model.addObject("lists", service.readAll());
+			return model;		
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			view.addAttribute("error", "OOPS DATA NOT FOUND");
+			model.setStatus(HttpStatus.BAD_REQUEST);
+			return model;
+		}
 	}
 
 	@Bean
