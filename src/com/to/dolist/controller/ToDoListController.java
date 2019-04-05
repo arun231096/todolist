@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ public class ToDoListController {
 	@Autowired
 	ToDoListServiceImpl service;
 	ToDoList list = getObj();
+	Logger logger = Logger.getLogger(ToDoListController.class);
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	public ModelAndView create(Locale locale,Model view,
 			@RequestParam String title,
@@ -39,18 +41,17 @@ public class ToDoListController {
 		list.setStartdate(startdate);
 		list.setStatus(status);
 		list.setTitle(title);
-		ModelAndView model = new ModelAndView("home");
+		ModelAndView model = new ModelAndView("redirect:/");
 		try {
 			list = service.create(list);
 			model.setStatus(HttpStatus.OK);
-			model.addObject("lists", service.readAll());
 			return model;
 		} catch (Exception e) {
 			model.setStatus(HttpStatus.BAD_REQUEST);
 			if (e instanceof AppException) {
-				System.out.println(((AppException) e).getErrorCodes());
-			} else { System.out.println(e.getMessage());}
-			view.addAttribute("error", "OOPS ERROR WHILE CREATING TODO FOR YOU");
+				logger.error(((AppException) e).getErrorCodes());
+			} else { logger.error(e.getMessage());}
+			view.addAttribute("error", "OOPS ERROR WHILE CREATING TODO FOR YOU PLEASE ENTER ALL FILEDS");
 			return model;
 		}
 	}
@@ -75,14 +76,14 @@ public class ToDoListController {
 		ModelAndView model;
 		try {
 			list = service.update(list);
-			model = new ModelAndView("home");
-			model.addObject("lists", service.readAll());
+			model = new ModelAndView("redirect:/");
 			return model;
 		} catch (Exception e) {
 			if (e instanceof AppException) {
-				System.out.println(((AppException) e).getErrorCodes());
-			} else { System.out.println(e.getMessage()); }
+				logger.error(((AppException) e).getErrorCodes());
+			} else { logger.error(e.getMessage()); }
 			model = new ModelAndView("redirect:/read");
+			model.addObject("error", "OOPS ERROR WHILE UPDATING TODO FOR YOU");
 			model.setStatus(HttpStatus.BAD_REQUEST);
 			view.addAttribute("id", list.getId());
 			return model;
@@ -101,7 +102,7 @@ public class ToDoListController {
 			model.addAttribute("message", list.getMessgae());
 			model.addAttribute("status", list.getStatus());
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			logger.error(e.getMessage());
 			model.addAttribute("error", "OOPS DATA NOT FOUND");
 		}
 		return "edit";
@@ -115,7 +116,7 @@ public class ToDoListController {
 			model.addObject("lists", list);
 			return model;
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			logger.error(e.getMessage());
 			view.addAttribute("error", "OOPS DATA NOT FOUND");
 			model.setStatus(HttpStatus.BAD_REQUEST);
 			return model;
@@ -126,15 +127,19 @@ public class ToDoListController {
 	@RequestMapping(value="/delete", method =  RequestMethod.GET)
 	public ModelAndView delete(Locale locale,Model view, @RequestParam long id) {
 		
-		ModelAndView model = new ModelAndView("home");
+		ModelAndView model = new ModelAndView("redirect:/");
 		try {
-			service.delete(id);
-			model.addObject("lists", service.readAll());
-			return model;		
+			if (service.delete(id)) {
+				return model;		
+			} else {
+				model.addObject("error", "OOPS DATA NOT FOUND");
+				model.setStatus(HttpStatus.BAD_REQUEST);
+				return model;
+			}
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			view.addAttribute("error", "OOPS DATA NOT FOUND");
-			model.setStatus(HttpStatus.BAD_REQUEST);
+			logger.error(e.getMessage());
+			model.addObject("error", "INTERNAL SERVER ERROR");
+			model.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 			return model;
 		}
 	}

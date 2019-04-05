@@ -10,5 +10,5 @@ public interface ToDoListService {
 	public ToDoList update(ToDoList list);
 	public ToDoList read(long id);
 	public List<ToDoList> readAll();
-	public void delete(long id);
+	public boolean delete(long id);
 }

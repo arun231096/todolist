@@ -82,9 +82,9 @@ public class ToDoListDAO extends JdbcDaoSupport {
 		return this.getJdbcTemplate().query(Statements.READ_ALL, mapper);
 	}
 	
-	public void delete(long id) {
+	public int delete(long id) {
 		Object[] parms = new Object[] {id};
-		this.getJdbcTemplate().update(Statements.DELETE,parms);
+		return this.getJdbcTemplate().update(Statements.DELETE,parms);
 	}
 	
 	@Bean
