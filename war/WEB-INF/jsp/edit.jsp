@@ -9,11 +9,21 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <style>
+  	h3 {
+  		color: red;
+  	}
+  </style>
 </head>
 <body>
 
 	<div class="col-sm-4" style="padding:40px;">
-	<c:if test="${error != null }"> <h1>${error}</h1> </c:if>
+	<c:if test="${error != null }"> <h3>${error}</h3> </c:if>
+	<%
+	    if (request.getParameter("error") != null) {
+	        out.println("<h3>"+request. getParameter("error")+"</h3>");
+	    }
+	%>
 		<h2>Your TODO</h2>
 		<form action="update" method="post">
 			<input type="hidden" value="${ id }" name="id">
