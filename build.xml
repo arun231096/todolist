@@ -41,6 +41,12 @@
          <classpath refid = "master-classpath"/>
       </javac>
 
+   	  <copy todir = "${build.dir}" preservelastmodified = "true">
+   	         <fileset dir = "${src.dir}">
+   	            <include name = "*.properties"/>
+   	         </fileset>
+   	      </copy>
+
       <war destfile = "${name}.war" webxml = "${web.dir}/WEB-INF/web.xml">
          <fileset dir = "${web.dir}">
             <include name = "**/*.*"/>
