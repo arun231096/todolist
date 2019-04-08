@@ -4,3 +4,4 @@ bin/log4j.properties
 war/WEB-INF/classes/log4j.properties
 src/log4j.properties
 Logs/ToDoList.log
+test-output/
