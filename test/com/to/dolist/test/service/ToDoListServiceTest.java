@@ -1,5 +1,6 @@
 package com.to.dolist.test.service;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -14,12 +15,15 @@ import org.testng.annotations.Test;
 
 import com.to.dolist.model.ToDoList;
 import com.to.dolist.service.ToDoListServiceImpl;
+import com.to.dolist.utilities.AppException;
+import com.to.dolist.utilities.ErrorCodes;
 
 public class ToDoListServiceTest {
 
 	private static ToDoListServiceImpl service = mock(ToDoListServiceImpl.class);
 	ToDoList listActual;
 	ToDoList listExpected;
+
 	@BeforeTest
 	public void setup() {
 		listActual = new ToDoList();
@@ -122,5 +126,54 @@ public class ToDoListServiceTest {
 	@DataProvider(name = "testDeletePositive") 
 	public Object[][] deleteToDo() {
 		return new Object[][] {{1, true}};
+	}
+	
+	/*
+	 *	Negative Test cases for ToDoList Service
+	 */
+
+	@Test(dataProvider = "testCreateNeg", expectedExceptions = AppException.class, priority =  6)
+	public void testCreateNeg(ToDoList listActual) {
+		when(service.create(any(ToDoList.class))).thenThrow(new AppException(ErrorCodes.TITLE_FILED_EMPTY));
+		service.create(listActual);
+	}
+	@DataProvider(name = "testCreateNeg")
+	public Object[][] createNeg() {
+		listActual.setTitle(null);
+		listActual.setEstimation(12);
+		listActual.setDuedate(Date.valueOf("2019-04-04"));
+		listActual.setStartdate(Date.valueOf("2019-04-04"));
+		listActual.setMessgae("sample msg");
+		listActual.setStatus("started");
+		return new Object[][] {{listActual}};
+	}
+
+	@Test(dataProvider = "testUpdateNeg", expectedExceptions = AppException.class, priority =  7)
+	public void testUpdateNeg(ToDoList listActual) {
+		when(service.create(any(ToDoList.class))).thenThrow(new AppException(ErrorCodes.TITLE_FILED_EMPTY));
+		service.create(listActual);
+	}
+	@DataProvider(name = "testUpdateNeg")
+	public Object[][] updateNeg() {
+		listActual.setId(1);
+		listActual.setTitle(null);
+		listActual.setEstimation(12);
+		listActual.setDuedate(Date.valueOf("2019-04-04"));
+		listActual.setStartdate(Date.valueOf("2019-04-04"));
+		listActual.setMessgae("sample msg");
+		listActual.setStatus("started");
+		return new Object[][] {{listActual}};
+	}
+
+	@Test (expectedExceptions = AppException.class, priority = 8)
+	public void readNegtive() {
+		when(service.read(any(Long.class))).thenThrow(new AppException(ErrorCodes.ID_ERROR));
+		service.read(0);
+	}
+
+	@Test (expectedExceptions = AppException.class, priority = 9)
+	public void deleteNegtive() {
+		when(service.delete(any(Long.class))).thenThrow(new AppException(ErrorCodes.ID_ERROR));
+		service.delete(0);
 	}
 }
